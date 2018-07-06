@@ -38,7 +38,7 @@ score<-function(sub_dt,dft){
 ### working function ###
 ########################
 trackML <- function(dfh,w1,w2,w3,Niter,epsilon=350){
-  epsilon = epsilon / epsilon
+  epsilon = epsilon / 100000
   dfh[,s1:=hit_id]
   dfh[,N1:=1L] 
   dfh[,r:=sqrt(x*x+y*y+z*z)]
