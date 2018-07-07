@@ -37,7 +37,7 @@ score<-function(sub_dt,dft){
 ######################## 
 ### working function ###
 ########################
-trackML <- function(dfh,w1,w2,w3,Niter,epsilon=350){
+trackML <- function(dfh,w1,w2,w3,w4,w5,Niter,epsilon=350){
   epsilon = epsilon / 100000
   dfh[,s1:=hit_id]
   dfh[,N1:=1L] 
@@ -46,14 +46,16 @@ trackML <- function(dfh,w1,w2,w3,Niter,epsilon=350){
   dfh[,a0:=atan2(y,x)]
   dfh[,z1:=z/rt]
   dfh[,z2:=z/r]
+  dfh[,z3:=1/z]
   mm     <-  1
   for (ii in 0:Niter) {
     mm <- mm*(-1)
     dfh[,a1:=a0+mm*(rt+0.000005*rt^2)/1000*(ii/2)/180*pi]
     dfh[,sina1:=sin(a1)]
     dfh[,cosa1:=cos(a1)]
-    dfs=scale(dfh[,.(sina1,cosa1,z1,z2)])
-	cx <- c(w1,w1,w2,w3)
+    dfh[,x1:=a1/z1]
+    dfs=scale(dfh[,.(sina1,cosa1,z1,z2,z3,x1)])
+	cx <- c(w1,w1,w2,w3,w4,w5)
     for (jj in 1:ncol(dfs)) dfs[,jj] <- dfs[,jj]*cx[jj]
     res=dbscan(dfs,eps=epsilon,minPts = 1)
     dfh[,s2:=res$cluster]
@@ -69,8 +71,8 @@ trackML <- function(dfh,w1,w2,w3,Niter,epsilon=350){
 # function for Bayessian Optimization #
 #   (needs lists: Score and Pred)     #
 #######################################
-Fun4BO <- function(w1,w2,w3,Niter,epsilon=350) { 
-   dfh$s1 <- trackML(dfh,w1,w2,w3,Niter,epsilon)
+Fun4BO <- function(w1,w2,w3,w4,w5,Niter,epsilon=350) { 
+   dfh$s1 <- trackML(dfh,w1,w2,w3,w4,w5,Niter,epsilon)
    sub_dt=data.table(event_id=nev,hit_id=dfh$hit_id,track_id=dfh$s1)
    sc <- score(sub_dt,dft)
    list(Score=sc,Pred=0)
@@ -79,34 +81,39 @@ Fun4BO <- function(w1,w2,w3,Niter,epsilon=350) {
 ###    Bayesian Optimization    ###
 ###################################
 print("Bayesian Optimization")
-nev=1000
-dfh=fread(paste0(path,'event00000',nev,'-hits.csv'))
-dft=fread(paste0(path,'event00000',nev,'-truth.csv'),stringsAsFactors = T)
+nev=1001
+dfh=fread(paste0(path,'event00000',nev,'-hits.csv'), showProgress=F)
+dft=fread(paste0(path,'event00000',nev,'-truth.csv'),stringsAsFactors = T, showProgress=F)
 OPT <- BayesianOptimization(Fun4BO,
-   bounds = list(w1 = c(0.9, 1.2), w2 = c(0.3, 0.7), w3 = c(0.1, 0.4), Niter = c(140L, 190L), epsilon=c(350L, 380L)),
-   init_points = 3, n_iter = 20,
+   bounds = list(w1 = c(0.9, 1.2), w2 = c(0.3, 0.7), w3 = c(0.1, 0.4), w4 = c(0.3, 0.7), w5 = c(0.3, 0.7), Niter = c(150L, 190L), epsilon=c(350L, 375L)),
+   init_points = 3, n_iter = 30,
    acq = "ucb", kappa = 2.576, eps = 0.0,
    verbose = TRUE)
 
 ########################
 ###    submission    ###
 ########################
-namef <- system("cd ./data/test; ls *hits.csv", intern=TRUE)
+namef <- system("ls ./data/test/*hits.csv", intern=TRUE)
 path <- './data/test/'
 print("Preparing submission")
 w1    <- OPT$Best_Par[[1]]
 w2    <- OPT$Best_Par[[2]]
 w3    <- OPT$Best_Par[[3]]
-Niter <- OPT$Best_Par[[4]]
-epsilon <- OPT$Best_Par[[5]]
+w4    <- OPT$Best_Par[[4]]
+w5    <- OPT$Best_Par[[5]]
+Niter <- OPT$Best_Par[[6]]
+epsilon <- OPT$Best_Par[[7]]
+
 registerDoParallel(cores=4)
-print("Parallel") # wait until "Finished"
-sub <- foreach(nev = 0:124, .combine = rbind)  %dopar%  {
-         dfh <- fread(paste0(path,namef[nev+1]))
-         dfh$s1 <- trackML(dfh,w1,w2,w3,Niter,epsilon)
+print("Parallel")
+
+sub_dt <- foreach(nev = 0:124, .combine = rbind, .export=c("fread", "dbscan", "data.table")) %dopar%  {
+         dfh <- fread(namef[nev+1], showProgress=F)
+         dfh$s1 <- trackML(dfh,w1,w2,w3,w4,w5,Niter,epsilon)
          subEvent <- data.table(event_id=nev,hit_id=dfh$hit_id,track_id=dfh$s1)
          return(subEvent)    
        }
-fwrite(sub, "sub-Bayes-Opt-DBSCAN.csv")
+
+fwrite(sub_dt, "sub-Bayes-Opt-DBSCAN.csv", showProgress=F)
 print('Finished')
 
