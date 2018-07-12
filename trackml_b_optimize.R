@@ -59,7 +59,6 @@ trackML <- function(dfh,w1,w2,w3,w4,w5,Niter,epsilon=350,step, stepeps){
     mm <- mm*(-1)
     dz = mm + dz0 * stepdz
     dfh[,a1:=a0+mm*(rt+(step*ii)*rt^2)/1000*(ii/2)/180*pi]
-    #dfh[,a1:=a0+mm*(rt+dz*rt^2)/1000*(ii/2)/180*pi]
     dfh[,sina1:=sin(a1)]
     dfh[,cosa1:=cos(a1)]
     dfh[,x1:=a1/z1]
