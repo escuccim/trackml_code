@@ -114,7 +114,7 @@ OPT <- BayesianOptimization(Fun4BO,
                             # bounds = list(w1 = c(0.9, 1.2), w2 = c(0.3, 0.5), w3 = c(0.15, 0.25), w4 = c(0.0, 0.01),Niter = c(150L, 151L), epsilon=350, step=c(0.000000, 0.00003), stepeps=c(0,0.000001), max_size=20, size_incr=0),
                             # bounds = list(w1 = c(0.9, 1.2), w2 = c(0.2, 0.5), w3 = c(0.1, 0.4), w4 = c(0.0, 0.01),Niter = c(150L, 151L), step=c(0.000000, 0.00003), stepeps=c(0,0.000001)),
                             #bounds = list(w1 = c(0.9, 1.0), w2 = c(0.3, 0.5), w3 = c(0.1, 0.4), w4 = c(0.05, 0.02), Niter = c(150L, 200L), epsilon=c(340L, 350L), step=c(0.000000, 0.000001), stepeps=c(0,0.001), step_z=c(0, 0.00001)),
-                            bounds = list(w1 = c(0.9, 1.1),w2 = c(0.4, 0.6), w3 = c(0.03, 0.5), w4 = c(0.007, 0.015), epsilon=c(340L, 350L), step=c(0.000000, 0.000001), stepeps=c(0.0,0.00001), max_size=c(14L,20L), step_z=c(0.000005, 0.00003), size_incr=c(0.8, 1.2)),
+                            bounds = list(w1 = c(0.9, 1.1),w2 = c(0.3, 0.5), w3 = c(0.03, 0.3), w4 = c(0.0, 0.015), epsilon=c(340L, 350L), step=c(0.000000, 0.000001), stepeps=c(0.0,0.00001), max_size=c(16L,21L), step_z=c(0.000005, 0.00003), size_incr=c(0.9, 1.1)),
                             init_points = 3, n_iter = 40,
                             acq = "ucb", kappa = 2.576, eps = 0.0,
                             verbose = TRUE)
